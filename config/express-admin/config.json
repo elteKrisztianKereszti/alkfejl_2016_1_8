@@ -1,6 +1,6 @@
 {
     "sqlite": {
-        "database": "database/development.sqlite"
+        "database": "database\\development.sqlite"
     },
     "server": {
         "port": 4444

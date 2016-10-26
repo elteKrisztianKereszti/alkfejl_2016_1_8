@@ -17,5 +17,8 @@
 
 const Route = use('Route')
 
-//Route.on('/').render('main')
-Route.get('/', 'RecipeController.index')
+Route.get('/', 'RecipeController.main').as('main')
+Route.get('/recipe', 'RecipeController.index').as('recipe_list')
+Route.get('/recipe/create', 'RecipeController.create').as('recipe_create')
+Route.post('/recipe/create', 'RecipeController.doCreate').as('do_recipe_create')
+Route.get('/recipe/:id', 'RecipeController.show').as('recipe_page')
