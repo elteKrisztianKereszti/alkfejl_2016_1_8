@@ -3,7 +3,7 @@
 ## Telepítés
 ```
 npm install
-./ace migration:run
+node ace migration:run
 ```
 
 ## Használat
