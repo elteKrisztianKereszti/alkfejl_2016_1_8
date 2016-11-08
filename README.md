@@ -2,8 +2,14 @@
 
 ## Telepítés
 ```
+# Linux:
+npm install
+./ace migration:run
+
+# Windows:
 npm install
 node ace migration:run
+copy .env.example .env
 ```
 
 ## Használat
