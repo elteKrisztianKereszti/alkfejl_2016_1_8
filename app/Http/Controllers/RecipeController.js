@@ -31,6 +31,14 @@ class RecipeController {
   /**
    *
    */
+  * index (request, response) {
+	// Kereső
+    response.route('main')
+  }
+
+  /**
+   *
+   */
   * create (request, response) {
     const categories = yield Category.all()
 
@@ -55,43 +63,44 @@ class RecipeController {
         .flash()
 
       response.route('recipe_create')
-    } else {
-      const category = yield Category.find(recipeData.category)
-
-      if (!category) {
-        yield request
-          .withAll()
-          .andWith({ errors: [{ message: 'category doesn\'t exist' }] })
-          .flash()
-
-        response.route('recipe_create')
-      } else {
-        const recipeImage = request.file('image', { maxSize: '1mb', allowedExtensions: ['jpg', 'JPG'] })
-
-        if (recipeImage.clientSize() > 0 && !recipeImage.validate()) {
-          yield request
-            .withAll()
-            .andWith({ errors: [{ message: recipeImage.errors() }] })
-            .flash()
-
-          response.route('recipe_create')
-          return
-        }
-
-        const recipe = new Recipe()
-        recipe.name = recipeData.name
-        recipe.description = recipeData.description
-        recipe.ingredients = recipeData.ingredients
-        recipe.category_id = recipeData.category
-        recipe.created_by_id = 1 // TODO: Replace
-
-        // TODO: these lines should be executed atomically
-        yield recipe.save()
-        yield recipeImage.move(Helpers.publicPath() + '/images', `${recipe.id}.jpg`)
-
-        response.route('recipe_page', { id: recipe.id })
-      }
+	  return;
     }
+    const category = yield Category.find(recipeData.category)
+
+    if (!category) {
+      yield request
+        .withAll()
+        .andWith({ errors: [{ message: 'category doesn\'t exist' }] })
+        .flash()
+
+      response.route('recipe_create')
+	  return;
+    }
+	
+    const recipeImage = request.file('image', { maxSize: '1mb', allowedExtensions: ['jpg', 'JPG'] })
+
+    if (recipeImage.clientSize() > 0 && !recipeImage.validate()) {
+      yield request
+        .withAll()
+        .andWith({ errors: [{ message: recipeImage.errors() }] })
+        .flash()
+
+      response.route('recipe_create')
+      return
+    }
+
+    const recipe = new Recipe()
+    recipe.name = recipeData.name
+    recipe.description = recipeData.description
+    recipe.ingredients = recipeData.ingredients
+    recipe.category_id = recipeData.category
+    recipe.created_by_id = request.currentUser.id
+
+    // TODO: these lines should be executed atomically
+    yield recipe.save()
+    yield recipeImage.move(Helpers.publicPath() + '/images', `${recipe.id}.jpg`)
+
+    response.route('recipe_page', { id: recipe.id })
   }
 
   /**
@@ -115,6 +124,119 @@ class RecipeController {
     }
   }
 
+  /**
+   *
+   */
+  * edit (request, response) {
+    const recipeId = request.param('id')
+    const recipe = yield Recipe.find(recipeId)
+
+	
+    if (!recipe || recipe.deleted == true) {
+	  yield response.notFound('Recipe not found.')
+	  return;
+    } 
+	
+    if (recipe.created_by_id !== request.currentUser.id) {
+      response.unauthorized('Access denied.')
+    }
+
+    yield recipe.related('category').load()
+    yield recipe.related('created_by').load()
+
+    const categories = yield Category.all()
+
+    yield response.sendView('recipe_edit', { categories: categories.toJSON(), recipe: recipe.toJSON() })
+  }
+
+  /**
+   *
+   */
+  * doEdit (request, response) {
+    const recipeId = request.param('id')
+    const recipe = yield Recipe.find(recipeId)
+
+    if (!recipe || recipe.deleted) {
+	  yield response.notFound('Recipe not found.')
+	  return;
+    } 
+	
+    if (recipe.created_by_id !== request.currentUser.id) {
+      yield response.unauthorized('Access denied.')
+	  return;
+    }
+	  
+    const recipeData = request.all()
+    const validation = yield Validator.validateAll(recipeData, {
+      name: 'required',
+      description: 'required',
+      ingredients: 'required'
+    })
+
+    if (validation.fails()) {
+      yield request
+        .with({ errors: validation.messages() })
+        .flash()
+
+      yield response.route('recipe_edit', {id: recipe.id})
+	  return;
+    } 
+      const category = yield Category.find(recipeData.category)
+
+    if (!category) {
+      yield request
+        .with({ errors: [{ message: 'category doesn\'t exist' }] })
+        .flash()
+
+      yield response.route('recipe_edit', {id: recipe.id})
+	  return;
+    } 
+    const recipeImage = request.file('image', { maxSize: '1mb', allowedExtensions: ['jpg', 'JPG'] })
+
+    if (recipeImage.clientSize() > 0) {
+      yield recipeImage.move(Helpers.publicPath() + '/images', `${recipe.id}.jpg`)
+
+      if (!recipeImage.moved()) {
+        yield request
+          .with({ errors: [{ message: recipeImage.errors() }] })
+          .flash()
+
+        response.route('recipe_edit', {id: recipe.id})
+        return
+      }
+    }
+
+    recipe.name = recipeData.name
+    recipe.description = recipeData.description
+    recipe.ingredients = recipeData.ingredients
+    recipe.category_id = recipeData.category
+
+    yield recipe.update()
+
+    response.route('recipe_page', { id: recipe.id })
+    
+  }
+
+  /**
+   *
+   */
+  * doDelete (request, response) {
+    const recipeId = request.param('id')
+    const recipe = yield Recipe.find(recipeId)
+
+    if (recipe) {
+      if (recipe.created_by_id !== request.currentUser.id) {
+        response.unauthorized('Access denied.')
+      }
+
+      recipe.deleted = true
+      yield recipe.update()
+
+      response.route('main')
+    } else {
+      response.notFound('Recipe not found.')
+    }
+  }
 }
 
 function fileExists(fileName) {
