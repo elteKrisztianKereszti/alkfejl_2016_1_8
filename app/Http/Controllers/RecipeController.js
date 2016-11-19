@@ -28,12 +28,37 @@ class RecipeController {
     })
   }
 
+
   /**
    *
    */
   * index (request, response) {
-	// Kereső
-    response.route('main')
+    const page = Math.max(1, request.input('p'))
+    const filters = {
+      recipeName: request.input('recipeName') || '',
+      category: request.input('category') || 0,
+      createdBy: request.input('createdBy') || 0
+    }
+
+    const recipes = yield Recipe.query()
+      .active()
+      .where(function () {
+        if (filters.category > 0) this.where('category_id', filters.category)
+        if (filters.createdBy > 0) this.where('created_by_id', filters.createdBy)
+        if (filters.recipeName.length > 0) this.where('name', 'LIKE', `%${filters.recipeName}%`)
+      })
+      .with('created_by')
+      .paginate(page, 9)
+
+    const categories = yield Category.all()
+    const users = yield User.all()
+
+    yield response.sendView('recipes', {
+      recipes: recipes.toJSON(),
+      categories: categories.toJSON(),
+      users: users.toJSON(),
+      filters
+    })
   }
 
   /**
