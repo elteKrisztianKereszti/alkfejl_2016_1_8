@@ -1,6 +1,12 @@
 {% extends 'master' %}
 
 {% block title %}Recept módosítása{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.5/validator.min.js"></script>
+<script src="/scripts/smart_ingredients.js"></script>
+{% endblock %}
+
 {% block content %}
   <h1>Recept módosítása</h1>
   {% if old('errors') %}
@@ -13,7 +19,7 @@
   </div>
   {% endif %}
   <div class="row">
-    <div class="col-md-6 col-md-offset-3">
+    <div class="col-md-8 col-md-offset-2">
       <form class="form-horizontal" action="{{ 'do_recipe_edit' | route({id: recipe.id}) }}" method="POST" enctype="multipart/form-data">
         {{ csrfField }}
         <div class="form-group">
