@@ -1,14 +1,13 @@
 
 function parseIngredients (text) {
-  return text
-    .split("\n")
-    .map(function(line) {
-      const firstSpace = line.indexOf(' ');
+  return text.split("\n")
+    .map(line => {
+      const firstSpace = line.indexOf(' ')
       return {
         amount: line.substring(0, firstSpace),
         name: line.substring(firstSpace + 1)
-      };
-    });
+      }
+    })
 }
 
 function collectIngredients () {
@@ -21,35 +20,25 @@ function collectIngredients () {
     })
   })
 
-  if (ingredients.some(
-    function(ing) {
-      return ing.amount.indexOf(' ') !== -1 
-	}))
-  {
+  if (ingredients.some(ing => ing.amount.indexOf(' ') !== -1)) {
     return ''
-  }
-  else
-  {
+  } else {
     return ingredients
-      .filter(function(ing) { return ing.amount.length > 0 && ing.name.length > 0 } )
-      .map(function(ing) { return ing.amount + ' ' + ing.name })
+      .filter(ing => ing.amount.length > 0 && ing.name.length > 0)
+      .map(ing => ing.amount + ' ' + ing.name)
       .join("\n")
   }
 }
 
 function insertIngredientInput (ingredient, $before) {
-  const $amountInput = $(`
-	<input class="form-control smart-ingredient-amount" type="text" value="${ingredient.amount}" required pattern="^\\S*$">
-  `);
-  const $nameInput = $(`
-    <input class="form-control smart-ingredient-name" type="text" value="${ingredient.name}" required>
-  `)
+  const $amountInput = $(`<input class="form-control smart-ingredient-amount" type="text" value="${ingredient.amount}" required pattern="^\\S*$">`)
+  const $nameInput = $(`<input class="form-control smart-ingredient-name" type="text" value="${ingredient.name}" required>`)
 
   const $removeBtn = $(`
     <button type="button" class="btn btn-danger btn-block">
-	  <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
-	</button>
-  `);
+      <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+    </button>`
+  )
 
   $removeBtn.on('click', function () { 
     $(this).closest('.smart-ingredient').remove()
@@ -66,18 +55,22 @@ function insertIngredientInput (ingredient, $before) {
 
 $('#inputIngredients').each(function () {
   const $textarea = $(this)
-  const ingredients = $textarea.val() != "" ? parseIngredients($textarea.val()) : undefined
-  
-  for (ingredient in ingredients) {
-    insertIngredientInput(ingredient, $textarea);
+  const ingredients = parseIngredients($textarea.val())
+
+  for (let ingredient of ingredients) {
+    insertIngredientInput(ingredient, $textarea)
   }
 
   $textarea.hide()
 
-  const $addBtn = $('<button type="button" class="btn btn-success btn-block"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span></button>')
+  const $addBtn = $(`
+    <button type="button" class="btn btn-success btn-block">
+      <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+    </button>
+  `)
 
   $addBtn
-    .on('click', function(e) { 
+    .on('click', () => { 
       insertIngredientInput({ amount: '', name: '' }, $textarea)
       $('form').validator('update') 
     })

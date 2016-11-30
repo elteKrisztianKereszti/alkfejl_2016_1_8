@@ -1,5 +1,10 @@
 {% extends 'master' %}
 
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/co/4.1.0/index.min.js"></script>
+<script src="/scripts/delete.js"></script>
+{% endblock %}
+
 {% block title %}{{ recipe.name }}{% endblock %}
 {% block content %}
   <h1>{{ recipe.name }}</h1>
@@ -11,12 +16,26 @@
   <pre>{{ recipe.ingredients }}</pre>
   <h2>Leírás</h2>
   <p>{{ recipe.description }}</p>
-  {% if currentUser %}
   {% if currentUser.id == recipe.created_by.id %}
   <div>
+    {{ csrfField | safe }}
     <a class="btn btn-primary" href="{{ 'recipe_edit' | route({id: recipe.id}) }}">Módosítás</a>
-    <a class="btn btn-danger" href="{{ 'recipe_delete' | route({id: recipe.id}) }}">Törlés</a>
+    <a class="btn btn-danger btn-delete" href="{{ 'recipe_delete' | route({id: recipe.id}) }}">Törlés</a>
+    <span class="help-block"></span>
   </div>
-  {% endif %}
+
+  <div class="modal fade confirm-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          Biztosan törölni szeretnéd?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success modal-ok" data-dismiss="modal">OK</button>
+          <button type="button" class="btn btn-danger modal-cancel" data-dismiss="modal">Mégse</button>
+        </div>
+      </div>
+    </div>
+  </div>
   {% endif %}
 {% endblock %}

@@ -1,14 +1,21 @@
 {% extends 'master' %}
 
 {% block title %}Kezdőlap{% endblock %}
+
+{% block scripts %}
+<script src="/scripts/main.js"></script>
+{% endblock %}
+
 {% block content %}
-  <form action="{{ 'recipe_list' | route }}" method="GET">
+  <form action="{{ 'recipe_list' | route }}" method="GET" style="position: relative;">
+    {{ csrfField }}
     <div class="input-group search-box">
-      <input type="text" class="form-control" placeholder="Keresés..." name="recipeName">
+      <input type="text" class="form-control recipe-search" placeholder="Keresés..." name="recipeName" autocomplete="off">
       <span class="input-group-btn">
         <button class="btn btn-info" type="submit">Mehet!</button>
       </span>
     </div>
+    <div class="list-group recipe-suggestions suggestions"></div>
   </form>
   {% for categoryBatch in categories | batch(3) %}
   <div class="row">
